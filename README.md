@@ -1,6 +1,6 @@
 # iobjects-crm
 
-This project is a fully functional CRM application developed on iObjects/Java/HTML/CSS/JavaScript. Its functional requirements were extracted from the **Salesforce** free trial version and it should cover all the basics, which are:
+This project is a fully functional CRM application developed on iObjects/Java/HTML/CSS/JavaScript. Its functional requirements were obtained from **Salesforce's** free trial version and it should cover all the basics, which are:
 
 - Multi-company and multi-department support.
 - Contacts: customers, supplyers, employees.
@@ -14,3 +14,4 @@ This project is a fully functional CRM application developed on iObjects/Java/HT
 - Tons of minor features.
 
 # About
+This CRM application was originally developed as a module for the Softgroup iManager (www.imanager.com.br). Softgroup is a brazilian company founded by me in 2008 and is still in operation. iManager is an ERP/CRM/BI solution used by hundreds of small retail companies in Brazil.
