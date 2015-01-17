@@ -1,4 +1,4 @@
-# iobjects-crm
+# iObjects CRM
 
 This project is a fully functional CRM web application developed on iObjects/Java/HTML/CSS/JavaScript. Its functional requirements were based on [Salesforce](http://salesforce.com)'s free trial version which should cover some pretty exciting features, like:
 
