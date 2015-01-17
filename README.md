@@ -6,7 +6,7 @@ This project is a fully functional CRM web application developed on iObjects/Jav
 - Contacts: customers, supplyers, employees.
 - Activities: calls, e-mails and any kind of interaction with contacts.
 - Tasks: contacts related requests and pendencies, due dates, forwarding history and more.
-- Opportunities: leads, follow up, status, successes/failures and more.
+- Leads: follow up, status, history, success/failure and more.
 - Call center screen: all contact related informations on sight, frequent activities and more.
 - Calendar with holidays support and weekly visualization.
 - Direct mail with route tracing support on Google Maps.
