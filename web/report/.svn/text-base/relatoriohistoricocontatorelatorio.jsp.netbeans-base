@@ -1,0 +1,573 @@
+
+<%@include file="../include/beans.jsp"%>
+
+<%@page import="imanager.entity.*"%>
+<%@page import="imanager.misc.*"%>
+<%@page import="imanager.report.*"%>
+
+<%!
+  public String getLast(String value) {
+    int index = value.lastIndexOf((Categoria.LEVEL_DELIMITER));
+    return index >= 0 ? value.substring(index+1) : value;
+  }
+%>
+
+<%
+  // início do bloco protegido
+  try {
+    // nossa instância de Histórico Contato
+    RelatorioHistoricoContato historicoContato = (RelatorioHistoricoContato)facade.getReport(RelatorioHistoricoContato.CLASS_NAME);
+    // nossa instância de Contato
+    Contato contato = (Contato)facade.getEntity(Contato.CLASS_NAME);
+    // nossa instância de Atendimento
+    Atendimento atendimento = (Atendimento)facade.getEntity(Atendimento.CLASS_NAME);
+
+    // define os valores dos parâmetros de usuário
+    historicoContato.userParamList().clearValues();
+    historicoContato.userParamList().setParamsValues(request);
+    // se não temos o Contato...exceção
+    if (historicoContato.USER_PARAM_CONTATO_ID.getIntValue() == 0)
+        throw new Exception("Este processo deve ser chamado através do comando '" + RelatorioHistoricoContato.COMMAND_MAKE_REPORT.getCaption() + "' existente em cadastros e relatórios do sistema.");
+
+    // contato
+    int contatoId = historicoContato.USER_PARAM_CONTATO_ID.getIntValue();
+    ContatoInfo contatoInfo = contato.selectByPrimaryKey(contatoId);
+
+    // hoje
+    java.util.Date today = DateTools.getActualDate();
+
+    // controladores
+    boolean titulosPagar   = false;
+    boolean titulosReceber = false;
+    TituloInfo[] tituloInfoList = historicoContato.getTitulos(contatoId);
+    // loop nos títulos
+    if (tituloInfoList.length > 0) {
+      for (int i=0; i<tituloInfoList.length; i++) {
+          TituloInfo tituloInfo = tituloInfoList[i];
+          // se a data de vencimento é antes da data atual e tem títulos a receber...
+          if((tituloInfo.getDataVencimento().before(today)) && (tituloInfo.getTipo() == 1))
+              titulosReceber = true;
+          // se a data de vencimento é antes da data atual e tem títulos a pagar...
+          if ((tituloInfo.getDataVencimento().before(today)) && (tituloInfo.getTipo() == 0))
+              titulosPagar = true;
+      } // for
+    } // if
+
+    // nosso Grid
+    ReportGrid reportGridRelatorioHistoricoContato = new ReportGrid("gridRelatorioHistoricoContato", true);
+    reportGridRelatorioHistoricoContato.addColumn("Parâmetro", "parametro", 50, ReportGrid.ALIGN_LEFT, ReportGrid.FORMAT_NONE, ReportGrid.TOTAL_TYPE_COUNT);
+    reportGridRelatorioHistoricoContato.addColumn("Código Hash", "hashcode", 50, ReportGrid.ALIGN_RIGHT, ReportGrid.FORMAT_INTEGER, ReportGrid.TOTAL_TYPE_SUM);
+%>
+
+<html>
+  <head>
+    <title><%=RelatorioHistoricoContato.ACTION.getCaption()%></title>
+    <link href="<%=facade.getStyle().reportInterface()%>" rel="stylesheet" type="text/css">
+    <script src="include/scripts.js" type="text/javascript"></script>
+  </head>
+  <body style="margin:0px;" oncontextmenu="return false;">
+    <div style="width:100%; height:100%; padding:5px; overflow:auto;">
+
+    <!-- Cabeçalho -->
+    <%=ReportHeader.script(facade, RelatorioHistoricoContato.ACTION, true, true, true, true, true)%>
+
+    <%=GroupBox.begin("Identificação")%>
+      <table style="width:100%;">
+        <tr>
+          <td style="width:auto;" class="FieldLabel"><%=Contato.FIELD_NOME.getCaption()%></td>
+          <td style="width:70px;" class="FieldLabel"><%=Contato.FIELD_TIPO_PESSOA.getCaption()%></td>
+          <td style="width:70px;" class="FieldLabel"><%=Contato.FIELD_CLIENTE.getCaption()%></td>
+          <td style="width:70px;" class="FieldLabel"><%=Contato.FIELD_FORNECEDOR.getCaption()%></td>
+          <td style="width:70px;" class="FieldLabel"><%=Contato.FIELD_FUNCIONARIO.getCaption()%></td>
+          <td style="width:70px;" class="FieldLabel"><%=Contato.FIELD_VENDEDOR.getCaption()%></td>
+          <td style="width:70px;" class="FieldLabel"><%=Contato.FIELD_TRANSPORTADOR.getCaption()%></td>
+        </tr>
+        <tr>
+          <td><a title="Ir para Contato" href="<%=Contato.ACTION_CADASTRO.url(Contato.COMMAND_EDIT, Contato.FIELD_CONTATO_ID.getFieldAlias() + "=" + contatoInfo.getContatoId())%>" target="frameContent"><%=contatoInfo.getNome()%></a></td>
+          <td><%=TipoPessoa.LOOKUP_LIST_FOR_FIELD[contatoInfo.getTipoPessoa()]%></td>
+          <td><%=NaoSim.LOOKUP_LIST_FOR_FIELD[contatoInfo.getCliente()]%></td>
+          <td><%=NaoSim.LOOKUP_LIST_FOR_FIELD[contatoInfo.getFornecedor()]%></td>
+          <td><%=NaoSim.LOOKUP_LIST_FOR_FIELD[contatoInfo.getFuncionario()]%></td>
+          <td><%=NaoSim.LOOKUP_LIST_FOR_FIELD[contatoInfo.getVendedor()]%></td>
+          <td><%=NaoSim.LOOKUP_LIST_FOR_FIELD[contatoInfo.getTransportador()]%></td>
+        </tr>
+      </table>
+    <%=GroupBox.end()%>
+
+    <%=GroupBox.begin("Dados Cadastrais")%>
+      <table cellpadding="0" cellspacing="0" style="width:100%;">
+        <tr>
+          <td style="width:35%;">
+
+            <!-- campos Grupo Contato e Percentual Comissão -->
+            <table style="width:100%;">
+              <tr>
+                <td style="width:auto;" class="FieldLabel"><%=Contato.LOOKUP_GRUPO_CONTATO.getCaption()%></td>
+                <td style="width:85px;" class="FieldLabel"><%=Contato.FIELD_PERCENTUAL_COMISSAO.getCaption()%></td>
+                <td style="width:85px;" class="FieldLabel"><%=Contato.FIELD_PERCENTUAL_INDICACAO.getCaption()%></td>
+              </tr>
+              <tr>
+                <td><%=contatoInfo.lookupValueList().get(Contato.LOOKUP_GRUPO_CONTATO).getDisplayFieldValuesToString()%></td>
+                <td><%=contatoInfo.getPercentualComissao()%></td>
+                <td><%=contatoInfo.getPercentualIndicacao()%></td>
+              </tr>
+            </table>
+
+          </td>
+          <td style="width:65%;">
+
+            <%if (contatoInfo.getTipoPessoa() == TipoPessoa.FISICA) {%>
+              <!-- campos CPF, RG, Data Nascimento e Sexo -->
+              <table id="tablePessoaFisica" style="width:100%;">
+                <tr>
+                  <td style="width:auto;" class="FieldLabel"><%=Contato.FIELD_CPF.getCaption()%></td>
+                  <td style="width:130px;" class="FieldLabel"><%=Contato.FIELD_RG.getCaption()%></td>
+                  <td style="width:100px;" class="FieldLabel"><%=Contato.FIELD_DATA_NASCIMENTO.getCaption()%></td>
+                  <td style="width:80px;" class="FieldLabel"><%=Contato.FIELD_SEXO.getCaption()%></td>
+                </tr>
+                <tr>
+                  <td><%=StringTools.formatCustomMask(contatoInfo.getCpf(), Contato.FIELD_CPF.getMask())%></td>
+                  <td><%=contatoInfo.getRg()%></td>
+                  <td><%=DateTools.formatDate(contatoInfo.getDataNascimento())%></td>
+                  <td><%=Sexo.LOOKUP_LIST_FOR_FIELD[contatoInfo.getSexo()]%></td>
+                </tr>
+              </table>
+            <%}
+              else {%>
+              <!-- campos Razão Social, CNPJ, Inscrições -->
+              <table id="tablePessoaJuridica" style="width:100%;">
+                <tr>
+                  <td style="width:auto;" class="FieldLabel"><%=Contato.FIELD_RAZAO_SOCIAL.getCaption()%></td>
+                  <td style="width:110px;" class="FieldLabel"><%=Contato.FIELD_CNPJ.getCaption()%></td>
+                  <td style="width:110px;" class="FieldLabel"><%=Contato.FIELD_INSCRICAO_ESTADUAL.getCaption()%></td>
+                  <td style="width:110px;" class="FieldLabel"><%=Contato.FIELD_INSCRICAO_MUNICIPAL.getCaption()%></td>
+                </tr>
+                <tr>
+                  <td><%=contatoInfo.getRazaoSocial()%></td>
+                  <td><%=StringTools.formatCustomMask(contatoInfo.getCnpj(), Contato.FIELD_CNPJ.getMask())%></td>
+                  <td><%=contatoInfo.getInscricaoEstadual()%></td>
+                  <td><%=contatoInfo.getInscricaoMunicipal()%></td>
+                </tr>
+              </table>
+            <%}%>
+
+          </td>
+        </tr>
+      </table>
+    <%=GroupBox.end()%>
+
+    <!-- campos CEP, Endereço, Número, Complemento, Bairro, Cidade, CEP, Telefones, Emails -->
+    <%=GroupBox.begin("Endereço")%>
+      <table style="width:100%;">
+        <tr>
+          <td style="width:60px;" class="FieldLabel"><%=Contato.FIELD_CEP.getCaption()%></td>
+          <td style="width:auto;" class="FieldLabel"><%=Contato.FIELD_ENDERECO.getCaption()%></td>
+          <td style="width:60px;" class="FieldLabel"><%=Contato.FIELD_ENDERECO_NUMERO.getCaption()%></td>
+          <td style="width:100px;" class="FieldLabel"><%=Contato.FIELD_ENDERECO_COMPLEMENTO.getCaption()%></td>
+          <td style="width:150px;" class="FieldLabel"><%=Contato.FIELD_ENDERECO_BAIRRO.getCaption()%></td>
+          <td style="width:auto;" class="FieldLabel"><%=Contato.FIELD_CIDADE.getCaption()%></td>
+          <td style="width:25px;" class="FieldLabel"><%=Contato.FIELD_UF.getCaption()%></td>
+        </tr>
+        <tr>
+          <td><%=contatoInfo.getCep()%></td>
+          <td><%=contatoInfo.getEndereco()%></td>
+          <td><%=contatoInfo.getEnderecoNumero()%></td>
+          <td><%=contatoInfo.getEnderecoComplemento()%></td>
+          <td><%=contatoInfo.getEnderecoBairro()%></td>
+          <td><%=contatoInfo.getCidade()%></td>
+          <td><%=contatoInfo.getUf()%></td>
+        </tr>
+      </table>
+      <table style="width:100%;">
+        <tr>
+          <td style="width:90px;" class="FieldLabel"><%=Contato.FIELD_TELEFONE_RESIDENCIAL.getCaption()%></td>
+          <td style="width:90px;" class="FieldLabel"><%=Contato.FIELD_TELEFONE_CELULAR.getCaption()%></td>
+          <td style="width:90px;" class="FieldLabel"><%=Contato.FIELD_TELEFONE_TRABALHO.getCaption()%></td>
+          <td style="width:auto;" class="FieldLabel"><%=Contato.FIELD_EMAIL.getCaption()%></td>
+        </tr>
+        <tr>
+          <td><%=contatoInfo.getTelefoneResidencial()%></td>
+          <td><%=contatoInfo.getTelefoneCelular()%></td>
+          <td><%=contatoInfo.getTelefoneTrabalho()%></td>
+          <td><%=contatoInfo.getEmail()%></td>
+        </tr>
+      </table>
+    <%=GroupBox.end()%>
+
+    <%=GroupBox.begin("Anotações")%>
+      <%// se não tiver títulos e anotações a serem exibidas...%>
+      <%=((!titulosReceber && !titulosPagar) && contatoInfo.getAnotacoes().equals("")) ? "<br>" : ""%>
+      <%// se possui titulos a pagar e/ou rebecer...%>
+      <%if (titulosReceber || titulosPagar) {%>
+        <div class="Info"><img alt="" src="<%=ImageList.IMAGE_WARNING%>" align="absmiddle" /> Possui título(s)<%=titulosPagar ? " a pagar" : "" %><%=titulosReceber && titulosPagar ? " e" : "" %><%=titulosReceber ? " a receber" : "" %>.</div>
+      <%} // if%>
+      <%=contatoInfo.getAnotacoes()%>
+    <%=GroupBox.end()%>
+
+    <!-- Agendamentos -->
+      <%if (facade.getLoggedUser().hasAccessRight(RelatorioHistoricoContato.ACTION, RelatorioHistoricoContato.COMMAND_AGENDAMENTOS)) {
+        // nossos agendamentos
+        AgendaHorarioInfo[] agendaHorarioInfoList = historicoContato.getAgendamentos(contatoId);
+        // se temos algo...
+        if (agendaHorarioInfoList.length > 0) {
+          // nosso grid
+          ReportGridEx reportGrid = new ReportGridEx("reportGrid", true);
+          reportGrid.addColumn("Agenda", 30, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Data", 10, ReportGrid.ALIGN_CENTER);
+          reportGrid.addColumn("Hora", 7, ReportGrid.ALIGN_CENTER);
+          reportGrid.addColumn("Status", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("", 38, ReportGrid.ALIGN_LEFT);
+        %>
+
+        <%=ReportTitle.script("<img src='images/commands/down.png' border='0' style='cursor:hand;' onclick=\"if (divAgendamento.style.display=='none') { divAgendamento.style.display='block'; this.src = 'images/commands/up.png'; } else { divAgendamento.style.display='none'; this.src = 'images/commands/down.png'; }\" />&nbsp;Agendamentos", ReportTitle.LEVEL_1)%>
+        <div id="divAgendamento" style="display:none;">
+          <%String empresa = "";
+            // loop nos registros
+            for (int i=0; i<agendaHorarioInfoList.length; i++) {
+              AgendaHorarioInfo agendaHorarioInfo = agendaHorarioInfoList[i];
+              String agendamentoEmpresa           = agendaHorarioInfo.lookupValueList().get(AgendaHorario.LOOKUP_EMPRESA).getDisplayFieldValuesToString();%>
+            <%if (!empresa.equals(agendamentoEmpresa)) {
+                empresa = agendamentoEmpresa;%>
+              <%=(i > 0) ? reportGrid.end() : ""%>
+              <p class="FieldLabel"><b><%=empresa%></b></p>
+              <%=reportGrid.begin()%>
+            <%} // if%>
+            <%=reportGrid.beginRow()%>
+              <%=reportGrid.beginCell()%> <%=agendaHorarioInfo.lookupValueList().get(AgendaHorario.LOOKUP_AGENDA).getDisplayFieldValuesToString()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=DateTools.formatDate(agendaHorarioInfo.getDataAgendamento())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <a title="Ir para Agendamento" href="<%=AgendaHorario.ACTION_CADASTRO.url(AgendaHorario.COMMAND_EDIT, AgendaHorario.FIELD_EMPRESA_ID.getFieldAlias() + "=" + agendaHorarioInfo.getEmpresaId() + "&" + AgendaHorario.FIELD_AGENDA_ID.getFieldAlias() + "=" + agendaHorarioInfo.getAgendaId()  + "&" + AgendaHorario.FIELD_AGENDA_HORARIO_ID.getFieldAlias() + "=" + agendaHorarioInfo.getAgendaHorarioId()  + "&" + AgendaHorario.FIELD_DATA_AGENDAMENTO.getFieldAlias() + "=" + DateTools.formatDate(agendaHorarioInfo.getDataAgendamento())  + "&" + AgendaHorario.FIELD_HORA_AGENDAMENTO.getFieldAlias() + "=" + agendaHorarioInfo.getHoraAgendamento())%>" target="frameContent"><%=AgendaHorario.FIELD_HORA_AGENDAMENTO.getFormatedFieldValue(agendaHorarioInfo)%></a> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=StatusAgendaHorario.LOOKUP_LIST_FOR_FIELD[agendaHorarioInfo.getStatus()]%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=reportGrid.endCell()%>
+            <%=reportGrid.endRow()%>
+          <%} // for%>
+          <%=reportGrid.end()%>
+        </div>
+      <%}%>
+    <%} //if%>
+
+    <!-- Atendimentos -->
+    <%if (facade.getLoggedUser().hasAccessRight(RelatorioHistoricoContato.ACTION, RelatorioHistoricoContato.COMMAND_ATENDIMENTOS)) {
+        // nossos atendimentos
+        AtendimentoInfo[] atendimentoInfoList = historicoContato.getAtendimentos(contatoId);
+        // se temos algo...
+        if (atendimentoInfoList.length > 0) {
+          // nosso grid
+          ReportGridEx reportGrid = new ReportGridEx("reportGrid", true);
+          reportGrid.addColumn("ID", 5, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Início", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Departamento", 30, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Assunto", 30, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Meio", 20, ReportGrid.ALIGN_LEFT);
+        %>
+
+        <%=ReportTitle.script("<img src='images/commands/down.png' border='0' style='cursor:hand;' onclick=\"if (divAtendimento.style.display=='none') { divAtendimento.style.display='block'; this.src = 'images/commands/up.png'; } else { divAtendimento.style.display='none'; this.src = 'images/commands/down.png'; }\" />&nbsp;Atendimentos", ReportTitle.LEVEL_1)%>
+        <div id="divAtendimento" style="display:none;">
+          <%String empresa = "";
+            // loop nos registros
+            for (int i=0; i<atendimentoInfoList.length; i++) {
+              AtendimentoInfo atendimentoInfo = atendimentoInfoList[i];
+              String atendimentoEmpresa       = atendimentoInfo.lookupValueList().get(Atendimento.LOOKUP_EMPRESA).getDisplayFieldValuesToString();%>
+            <%if (!empresa.equals(atendimentoEmpresa)) {
+                empresa = atendimentoEmpresa;%>
+              <%=(i > 0) ? reportGrid.end() : ""%>
+              <p class="FieldLabel"><b><%=empresa%></b></p>
+              <%=reportGrid.begin()%>
+            <%} // if%>
+            <%=reportGrid.beginRow()%>
+              <%=reportGrid.beginCell()%> <a title="Ir para Atendimento" href="<%=Atendimento.ACTION_CADASTRO.url(Atendimento.COMMAND_EDIT, Atendimento.FIELD_EMPRESA_ID.getFieldAlias() + "=" + atendimentoInfo.getEmpresaId() + "&" + Atendimento.FIELD_ATENDIMENTO_ID.getFieldAlias() + "=" + atendimentoInfo.getAtendimentoId())%>" target="frameContent"><%=atendimentoInfo.getAtendimentoId()%></a> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=DateTools.formatDateTime(atendimentoInfo.getDataHoraInicio())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=atendimentoInfo.lookupValueList().get(Atendimento.LOOKUP_DEPARTAMENTO).getDisplayFieldValuesToString()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=getLast(atendimentoInfo.lookupValueList().get(Atendimento.LOOKUP_ASSUNTO).getDisplayFieldValuesToString())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=atendimentoInfo.lookupValueList().get(Atendimento.LOOKUP_MEIO).getDisplayFieldValuesToString()%> <%=reportGrid.endCell()%>
+            <%=reportGrid.endRow()%>
+          <%} // for%>
+          <%=reportGrid.end()%>
+        </div>
+      <%}%>
+    <%} //if%>
+
+    <!-- Tarefas -->
+    <%if (facade.getLoggedUser().hasAccessRight(RelatorioHistoricoContato.ACTION, RelatorioHistoricoContato.COMMAND_TAREFAS)) {
+        // nossas tarefas
+        TarefaInfo[] tarefaInfoList = historicoContato.getTarefas(contatoId);
+        // se temos algo...
+        if (tarefaInfoList.length > 0) {
+          // nosso grid
+          ReportGridEx reportGrid = new ReportGridEx("reportGrid", true);
+          reportGrid.addColumn("ID", 5, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Prazo", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Departamento", 25, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Assunto", 25, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Usuário", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Status", 20, ReportGrid.ALIGN_LEFT);
+        %>
+
+        <%=ReportTitle.script("<img src='images/commands/down.png' border='0' style='cursor:hand;' onclick=\"if (divTarefa.style.display=='none') { divTarefa.style.display='block'; this.src = 'images/commands/up.png'; } else { divTarefa.style.display='none'; this.src = 'images/commands/down.png'; }\" />&nbsp;Tarefas", ReportTitle.LEVEL_1)%>
+        <div id="divTarefa" style="display:none;">
+          <%String empresa = "";
+            // loop nos registros
+            for (int i=0; i<tarefaInfoList.length; i++) {
+              TarefaInfo tarefaInfo = tarefaInfoList[i];
+              String tarefaEmpresa  = tarefaInfo.lookupValueList().get(Tarefa.LOOKUP_EMPRESA).getDisplayFieldValuesToString();%>
+            <%if (!empresa.equals(tarefaEmpresa)) {
+                empresa = tarefaEmpresa;%>
+              <%=(i > 0) ? reportGrid.end() : ""%>
+              <p class="FieldLabel"><b><%=empresa%></b></p>
+              <%=reportGrid.begin()%>
+            <%} // if%>
+            <%=reportGrid.beginRow()%>
+              <%=reportGrid.beginCell()%> <a title="Ir para Tarefa" href="<%=Tarefa.ACTION_CADASTRO.url(Tarefa.COMMAND_EDIT, Tarefa.FIELD_EMPRESA_ID.getFieldAlias() + "=" + tarefaInfo.getEmpresaId() + "&" + Tarefa.FIELD_TAREFA_ID.getFieldAlias() + "=" + tarefaInfo.getTarefaId())%>" target="frameContent"><%=tarefaInfo.getTarefaId()%></a> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=(tarefaInfo.getPrazo().before(today) ? "<font color=red>" : "") + DateTools.formatDate(tarefaInfo.getPrazo()) + (tarefaInfo.getPrazo().before(today) ? "</font>" : "")%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=tarefaInfo.lookupValueList().get(Tarefa.LOOKUP_DEPARTAMENTO).getDisplayFieldValuesToString()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=getLast(tarefaInfo.lookupValueList().get(Tarefa.LOOKUP_ASSUNTO).getDisplayFieldValuesToString())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=tarefaInfo.lookupValueList().get(Tarefa.LOOKUP_USUARIO).getDisplayFieldValuesToString()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=StatusTarefa.LOOKUP_LIST_FOR_FIELD[tarefaInfo.getStatus()]%> <%=reportGrid.endCell()%>
+            <%=reportGrid.endRow()%>
+          <%} // for%>
+          <%=reportGrid.end()%>
+        </div>
+
+      <%}%>
+    <%} //if%>
+
+    <!-- Titulos -->
+    <%if (facade.getLoggedUser().hasAccessRight(RelatorioHistoricoContato.ACTION, RelatorioHistoricoContato.COMMAND_TITULOS)) {
+        // nossos titulos
+        tituloInfoList = historicoContato.getTitulos(contatoId);
+        // se temos algo...
+        if (tituloInfoList.length > 0) {
+          // nosso grid
+          ReportGridEx reportGrid = new ReportGridEx("reportGrid", true);
+          reportGrid.addColumn("ID", 5, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Vencimento", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Tipo", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Categoria", 35, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Valor", 15, ReportGrid.ALIGN_RIGHT);
+          reportGrid.addColumn("Recorrência", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Quantidade", 5, ReportGrid.ALIGN_RIGHT);
+        %>
+
+        <%=ReportTitle.script("<img src='images/commands/down.png' border='0' style='cursor:hand;' onclick=\"if (divTitulo.style.display=='none') { divTitulo.style.display='block'; this.src = 'images/commands/up.png'; } else { divTitulo.style.display='none'; this.src = 'images/commands/down.png'; }\" />&nbsp;Títulos", ReportTitle.LEVEL_1)%>
+        <div id="divTitulo" style="display:none;">
+          <%String empresa = "";
+            // loop nos registros
+            for (int i=0; i<tituloInfoList.length; i++) {
+              TituloInfo tituloInfo = tituloInfoList[i];
+              String tituloEmpresa  = tituloInfo.lookupValueList().get(Titulo.LOOKUP_EMPRESA).getDisplayFieldValuesToString();%>
+            <%if (!empresa.equals(tituloEmpresa)) {
+                empresa = tituloEmpresa;%>
+              <%=(i > 0) ? reportGrid.end() : ""%>
+              <p class="FieldLabel"><b><%=empresa%></b></p>
+              <%=reportGrid.begin()%>
+            <%} // if%>
+            <%=reportGrid.beginRow()%>
+              <%=reportGrid.beginCell()%> <a title="Ir para Título" href="<%=Titulo.ACTION_CADASTRO.url(Titulo.COMMAND_EDIT, Titulo.FIELD_EMPRESA_ID.getFieldAlias() + "=" + tituloInfo.getEmpresaId() + "&" + Titulo.FIELD_TITULO_ID.getFieldAlias() + "=" + tituloInfo.getTituloId())%>" target="frameContent"><%=tituloInfo.getTituloId()%></a> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=(tituloInfo.getDataVencimento().before(today) ? "<font color=red>" : "") + DateTools.formatDate(tituloInfo.getDataVencimento()) + (tituloInfo.getDataVencimento().before(today) ? "</font>" : "")%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=TipoTitulo.LOOKUP_LIST_FOR_FIELD[tituloInfo.getTipo()]%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=getLast(tituloInfo.lookupValueList().get(Titulo.LOOKUP_CATEGORIA).getDisplayFieldValuesToString())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=(tituloInfo.getTipo() == TipoTitulo.PAGAR ? "<font color=red>" : "") + NumberTools.format(tituloInfo.getValor()) + (tituloInfo.getTipo() == TipoTitulo.PAGAR ? "</font>" : "")%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=Recorrencia.LOOKUP_LIST_FOR_FIELD[tituloInfo.getRecorrencia()]%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=tituloInfo.getQuantidadeRecorrencia()%> <%=reportGrid.endCell()%>
+            <%=reportGrid.endRow()%>
+          <%} // for%>
+          <%=reportGrid.end()%>
+        </div>
+
+      <%}%>
+    <%} // if%>
+
+    <!-- Lancamentos -->
+    <%if (facade.getLoggedUser().hasAccessRight(RelatorioHistoricoContato.ACTION, RelatorioHistoricoContato.COMMAND_LANCAMENTOS)) {
+        // nossos lancamentos
+        LancamentoInfo[] lancamentoInfoList = historicoContato.getLancamentos(contatoId);
+        // se temos algo...
+        if (lancamentoInfoList.length > 0) {
+          // nosso grid
+          ReportGridEx reportGrid = new ReportGridEx("reportGrid", true);
+          reportGrid.addColumn("Tipo", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Data", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Categoria", 40, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Valor", 10, ReportGrid.ALIGN_RIGHT);
+          reportGrid.addColumn("Meio de Pagamento", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Administradora", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Cheque", 10, ReportGrid.ALIGN_LEFT);
+        %>
+
+        <%=ReportTitle.script("<img src='images/commands/down.png' border='0' style='cursor:hand;' onclick=\"if (divLancamento.style.display=='none') { divLancamento.style.display='block'; this.src = 'images/commands/up.png'; } else { divLancamento.style.display='none'; this.src = 'images/commands/down.png'; }\" />&nbsp;Lançamentos", ReportTitle.LEVEL_1)%>
+        <div id="divLancamento" style="display:none;">
+          <%String empresa = "";
+            // loop nos registros
+            for (int i=lancamentoInfoList.length - 1; -1<i; i--) {
+              LancamentoInfo lancamentoInfo = lancamentoInfoList[i];
+              String lancamentoEmpresa      = lancamentoInfo.lookupValueList().get(Lancamento.LOOKUP_EMPRESA).getDisplayFieldValuesToString();%>
+            <%if (!empresa.equals(lancamentoEmpresa)) {
+                empresa = lancamentoEmpresa;%>
+              <%=(i > 0) ? reportGrid.end() : ""%>
+              <p class="FieldLabel"><b><%=empresa%></b></p>
+              <%=reportGrid.begin()%>
+            <%} // if%>
+            <%=reportGrid.beginRow()%>
+              <%=reportGrid.beginCell()%> <a title="Ir para Lançamento" href="<%=Lancamento.ACTION_CADASTRO.url(Lancamento.COMMAND_EDIT, Lancamento.FIELD_EMPRESA_ID.getFieldAlias() + "=" + lancamentoInfo.getEmpresaId() + "&" + Lancamento.FIELD_CONTA_ID.getFieldAlias() + "=" + lancamentoInfo.getContaId() + "&" + Lancamento.FIELD_LANCAMENTO_ID.getFieldAlias() + "=" + lancamentoInfo.getLancamentoId())%>" target="frameContent"><%=TipoLancamento.LOOKUP_LIST_FOR_FIELD[lancamentoInfo.getTipo()]%></a> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=DateTools.formatDate(lancamentoInfo.getData())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=getLast(lancamentoInfo.lookupValueList().get(Lancamento.LOOKUP_CATEGORIA).getDisplayFieldValuesToString())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=(lancamentoInfo.getTipo() == TipoLancamento.RETIRADA ? "<font color=red>" : "") + NumberTools.format(lancamentoInfo.getValor()) + (lancamentoInfo.getTipo() == TipoLancamento.RETIRADA ? "</font>" : "")%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=MeioPagamento.LOOKUP_LIST_FOR_FIELD[lancamentoInfo.getMeioPagamento()]%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=Administradora.LOOKUP_LIST_FOR_FIELD[lancamentoInfo.getAdministradora()]%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=lancamentoInfo.getNumeroCheque()%> <%=reportGrid.endCell()%>
+            <%=reportGrid.endRow()%>
+          <%} // for%>
+          <%=reportGrid.end()%>
+        </div>
+
+      <%}%>
+    <%} // if%>
+
+
+    <!-- Entradas -->
+    <%if (facade.getLoggedUser().hasAccessRight(RelatorioHistoricoContato.ACTION, RelatorioHistoricoContato.COMMAND_ENTRADAS)) {
+        // nossas entradas
+        EntradaInfo[] entradaInfoList = historicoContato.getEntradas(contatoId);
+        // se temos algo...
+        if (entradaInfoList.length > 0) {
+          // nosso grid
+          ReportGridEx reportGrid = new ReportGridEx("reportGrid", true);
+          reportGrid.addColumn("ID", 5, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Data", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Nº Pedidos", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Nota Fiscal", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Natureza", 25, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Status", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Valor Total", 15, ReportGrid.ALIGN_RIGHT);
+        %>
+
+        <%=ReportTitle.script("<img src='images/commands/down.png' border='0' style='cursor:hand;' onclick=\"if (divEntrada.style.display=='none') { divEntrada.style.display='block'; this.src = 'images/commands/up.png'; } else { divEntrada.style.display='none'; this.src = 'images/commands/down.png'; }\" />&nbsp;Entradas", ReportTitle.LEVEL_1)%>
+        <div id="divEntrada" style="display:none;">
+          <%String empresa = "";
+            // loop nos registros
+            for (int i=0; i<entradaInfoList.length; i++) {
+              EntradaInfo entradaInfo = entradaInfoList[i];
+              String entradaEmpresa   = entradaInfo.lookupValueList().get(Entrada.LOOKUP_EMPRESA).getDisplayFieldValuesToString();%>
+            <%if (!empresa.equals(entradaEmpresa)) {
+                empresa = entradaEmpresa;%>
+              <%=(i > 0) ? reportGrid.end() : ""%>
+              <p class="FieldLabel"><b><%=empresa%></b></p>
+              <%=reportGrid.begin()%>
+            <%} // if%>
+            <%=reportGrid.beginRow()%>
+              <%=reportGrid.beginCell()%> <a title="Ir para Entrada" href="<%=Entrada.ACTION_CADASTRO.url(Entrada.COMMAND_EDIT, Entrada.FIELD_EMPRESA_ID.getFieldAlias() + "=" + entradaInfo.getEmpresaId() + "&" + Entrada.FIELD_ENTRADA_ID.getFieldAlias() + "=" + entradaInfo.getEntradaId())%>" target="frameContent"><%=entradaInfo.getEntradaId()%></a> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=DateTools.formatDate(entradaInfo.getDataInclusao())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=entradaInfo.getNumeroPedido()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=entradaInfo.getNotaFiscal()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=Natureza.LOOKUP_LIST_FOR_FIELD[entradaInfo.getNatureza()]%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=(entradaInfo.getStatus() == StatusEntrada.FATURADA ? "<font style=color:green>" : entradaInfo.getStatus() == StatusEntrada.CANCELADA ? "<font style=color:red>" : "<font style=color:blue>") + StatusEntrada.LOOKUP_LIST_FOR_FIELD[entradaInfo.getStatus()] + "</font>"%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=NumberTools.format(entradaInfo.getValorTotal())%> <%=reportGrid.endCell()%>
+            <%=reportGrid.endRow()%>
+          <%} // for%>
+          <%=reportGrid.end()%>
+        </div>
+
+      <%}%>
+    <%} // if%>
+    
+    <!-- Pedidos -->
+    <%if (facade.getLoggedUser().hasAccessRight(RelatorioHistoricoContato.ACTION, RelatorioHistoricoContato.COMMAND_PEDIDOS)) {
+        // nossos pedidos
+        ServicoPedidoInfo[] servicoPedidoInfoList = historicoContato.getPedidos(contatoId);
+        // se temos algo...
+        if (servicoPedidoInfoList.length > 0){
+          // nosso grid
+          ReportGridEx reportGrid = new ReportGridEx("reportGrid", true);
+          reportGrid.addColumn("ID", 5, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Data", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Nº Pedido", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Vendedor", 25, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Status Faturamento", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Valor Total", 15, ReportGrid.ALIGN_RIGHT);
+          %>
+          <%=ReportTitle.script("<img src='images/commands/down.png' border='0' style='cursor:hand;' onclick=\"if (divPedido.style.display=='none') { divPedido.style.display='block'; this.src = 'images/commands/up.png'; } else { divPedido.style.display='none'; this.src = 'images/commands/down.png'; }\" />&nbsp;Pedidos", ReportTitle.LEVEL_1)%>
+          <div id="divPedido" style="display:none;">
+          <%String empresa = "";
+            // loop nos registros
+            for (int i=0; i<servicoPedidoInfoList.length; i++) {
+              ServicoPedidoInfo servicoPedidoInfo = servicoPedidoInfoList[i];
+              String pedidoEmpresa = servicoPedidoInfo.lookupValueList().get(ServicoPedido.LOOKUP_EMPRESA).getDisplayFieldValuesToString();%>
+            <%if (!empresa.equals(pedidoEmpresa)) {
+                empresa = pedidoEmpresa;%>
+              <%=(i > 0) ? reportGrid.end() : ""%>
+              <p class="FieldLabel"><b><%=empresa%></b></p>
+              <%=reportGrid.begin()%>
+            <%} // if%>
+            <%=reportGrid.beginRow()%>
+              <%=reportGrid.beginCell()%> <a title="Ir para Pedido" href="<%=ServicoPedido.ACTION_CADASTRO.url(ServicoPedido.COMMAND_EDIT, ServicoPedido.FIELD_EMPRESA_ID.getFieldAlias() + "=" + servicoPedidoInfo.getEmpresaId() + "&" + ServicoPedido.FIELD_PEDIDO_ID.getFieldAlias() + "=" + servicoPedidoInfo.getPedidoId())%>" target="frameContent"><%=servicoPedidoInfo.getPedidoId()%></a> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=DateTools.formatDate(servicoPedidoInfo.getDataInclusao())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=servicoPedidoInfo.getNumeroPedido()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=servicoPedidoInfo.lookupValueList().get(ServicoPedido.LOOKUP_VENDEDOR).getDisplayFieldValuesToString()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=(servicoPedidoInfo.getStatusFaturamento() == StatusFaturamentoServico.FATURADO ? "<font style=color:green>" : servicoPedidoInfo.getStatusFaturamento() == StatusFaturamentoServico.CANCELADO ? "<font style=color:red>" : "<font style=color:blue>") + StatusFaturamentoServico.LOOKUP_LIST_FOR_FIELD[servicoPedidoInfo.getStatusFaturamento()] + "</font>"%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=NumberTools.format(servicoPedidoInfo.getValorTotal())%> <%=reportGrid.endCell()%>
+            <%=reportGrid.endRow()%>
+          <%} // for%>
+          <%=reportGrid.end()%>
+        </div>
+
+        <%} // if%>
+    <%} // if%>
+    
+    <!-- Saidas -->
+    <%if (facade.getLoggedUser().hasAccessRight(RelatorioHistoricoContato.ACTION, RelatorioHistoricoContato.COMMAND_SAIDAS)) {
+        // nossas saidas
+        SaidaInfo[] saidaInfoList = historicoContato.getSaidas(contatoId);
+        // se temos algo...
+        if (saidaInfoList.length > 0) {
+          // nosso grid
+          ReportGridEx reportGrid = new ReportGridEx("reportGrid", true);
+          reportGrid.addColumn("ID", 5, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Data", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Nº Pedido", 10, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Natureza", 20, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Vendedor", 25, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Status", 15, ReportGrid.ALIGN_LEFT);
+          reportGrid.addColumn("Valor Total", 15, ReportGrid.ALIGN_RIGHT);
+        %>
+
+        <%=ReportTitle.script("<img src='images/commands/down.png' border='0' style='cursor:hand;' onclick=\"if (divSaida.style.display=='none') { divSaida.style.display='block'; this.src = 'images/commands/up.png'; } else { divSaida.style.display='none'; this.src = 'images/commands/down.png'; }\" />&nbsp;Saídas", ReportTitle.LEVEL_1)%>
+        <div id="divSaida" style="display:none;">
+          <%String empresa = "";
+            // loop nos registros
+            for (int i=0; i<saidaInfoList.length; i++) {
+              SaidaInfo saidaInfo = saidaInfoList[i];
+              String saidaEmpresa = saidaInfo.lookupValueList().get(Saida.LOOKUP_EMPRESA).getDisplayFieldValuesToString();%>
+            <%if (!empresa.equals(saidaEmpresa)) {
+                empresa = saidaEmpresa;%>
+              <%=(i > 0) ? reportGrid.end() : ""%>
+              <p class="FieldLabel"><b><%=empresa%></b></p>
+              <%=reportGrid.begin()%>
+            <%} // if%>
+            <%=reportGrid.beginRow()%>
+              <%=reportGrid.beginCell()%> <a title="Ir para Saida" href="<%=Saida.ACTION_CADASTRO.url(Saida.COMMAND_EDIT, Saida.FIELD_EMPRESA_ID.getFieldAlias() + "=" + saidaInfo.getEmpresaId() + "&" + Saida.FIELD_SAIDA_ID.getFieldAlias() + "=" + saidaInfo.getSaidaId())%>" target="frameContent"><%=saidaInfo.getSaidaId()%></a> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=DateTools.formatDate(saidaInfo.getDataInclusao())%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=saidaInfo.getNumeroPedido()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=Natureza.LOOKUP_LIST_FOR_FIELD[saidaInfo.getNatureza()]%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=saidaInfo.lookupValueList().get(Saida.LOOKUP_VENDEDOR).getDisplayFieldValuesToString()%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=(saidaInfo.getStatus() == StatusSaida.FATURADA ? "<font style=color:green>" : saidaInfo.getStatus() == StatusSaida.CANCELADA ? "<font style=color:red>" : "<font style=color:blue>") + StatusSaida.LOOKUP_LIST_FOR_FIELD[saidaInfo.getStatus()] + "</font>"%> <%=reportGrid.endCell()%>
+              <%=reportGrid.beginCell()%> <%=NumberTools.format(saidaInfo.getValorTotal())%> <%=reportGrid.endCell()%>
+            <%=reportGrid.endRow()%>
+          <%} // for%>
+          <%=reportGrid.end()%>
+        </div>
+
+      <%}%>
+    <%} // if%>
+
+    <!-- Rodapé -->
+    <%=ReportFooter.script(facade, true, true)%>
+
+    </div>
+  </body>
+</html>
+
+<%}
+  // término do bloco protegido
+  catch (Exception e) {
+    Controller.forwardException(e, pageContext);
+  } // try-catch
+%>

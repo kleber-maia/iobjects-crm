@@ -1,0 +1,74 @@
+10
+
+dir
+2337
+http://server.softgroup.com.br/svn/Sistemas/Java/iManager/iManager%20CRM
+http://server.softgroup.com.br/svn
+
+
+
+2013-10-18T17:49:08.833800Z
+2220
+kleber
+has-props
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+7a8990f6-68fb-4a9e-9ff3-bc34ca3076f1
+
+build.xml
+file
+
+
+
+
+2012-01-02T17:27:50.000000Z
+f60b307bb48d992e1a839e9b563aea8e
+2010-10-28T19:28:31.326519Z
+17
+kleber
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3914
+
+nbproject
+dir
+
+src
+dir
+
+test
+dir
+
+web
+dir
+
