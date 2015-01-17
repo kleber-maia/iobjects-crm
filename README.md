@@ -1,6 +1,6 @@
 # iobjects-crm
 
-This project is a fully functional CRM web application developed on iObjects/Java/HTML/CSS/JavaScript. Its functional requirements were based on [Salesforce](http://salesforce.com)'s free trial version and it should cover some pretty exciting features, like:
+This project is a fully functional CRM web application developed on iObjects/Java/HTML/CSS/JavaScript. Its functional requirements were based on [Salesforce](http://salesforce.com)'s free trial version and they should cover some pretty exciting features, like:
 
 - Multi-company and multi-department support.
 - Contacts: customers, supplyers, employees.
