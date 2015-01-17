@@ -14,7 +14,7 @@ This project is a fully functional CRM application developed on iObjects/Java/HT
 - Tons of minor features.
 
 # About
-This CRM application was originally developed as a module for the Softgroup iManager (www.imanager.com.br). Softgroup is a brazilian company founded by me in 2008 and is still in operation. iManager is an ERP/CRM/BI solution used by hundreds of small retail companies in Brazil.
+This CRM application was originally developed as a module for the [Softgroup iManager](www.imanager.com.br). Softgroup is a brazilian company founded by me in 2008 and is still in operation. iManager is an ERP/CRM/BI solution used by hundreds of small retail companies in Brazil.
 
 The UI and the source code comments were published as is: in brazilian portuguese. I apologize for any inconvenience, but I'm afraid I'll not have spare time enough to work on any kind of translation.
 
