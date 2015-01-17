@@ -13,6 +13,11 @@ This project is a fully functional CRM web application developed on iObjects/Jav
 - 25 cards and reports with several different analysis about ROI, ad campaigns, salesman performance, etc.
 - Tons of minor features.
 
+![Login screen](https://raw.github.com/kleber-maia/iobjects-crm/master/README.img/1.png)
+![Customizable desktop](https://raw.github.com/kleber-maia/iobjects-crm/master/README.img/2.png)
+![Contact form](https://raw.github.com/kleber-maia/iobjects-crm/master/README.img/3.png)
+![Leads by ad campaign report](https://raw.github.com/kleber-maia/iobjects-crm/master/README.img/4.png)
+
 ## About
 This CRM application was originally developed as a module for the [Softgroup iManager](http://imanager.com.br). Softgroup is a brazilian company founded by me in 2008 and is still in operation. iManager is an ERP/CRM/BI solution used by hundreds of small retail companies in Brazil.
 
