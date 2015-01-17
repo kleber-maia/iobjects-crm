@@ -15,3 +15,17 @@ This project is a fully functional CRM application developed on iObjects/Java/HT
 
 # About
 This CRM application was originally developed as a module for the Softgroup iManager (www.imanager.com.br). Softgroup is a brazilian company founded by me in 2008 and is still in operation. iManager is an ERP/CRM/BI solution used by hundreds of small retail companies in Brazil.
+
+# Technical requisites
+- iObjects framework
+- Java 1.6 or higher
+- Netbeans 8.0 or higher (Eclipse and other IDEs should be fine, but we're going to need to configure the project by yourself).
+
+# Database structure
+There is a .sql file on the root of this project which contains all the needed table structure, plus a few sample records.
+
+# Users and passwords
+The following users will be automatically created on the first run. Additionally, you'll be able to insert all users and roles that you need by using the iObjects Security Service module.
+- Username: @Super Usuário, Password: superusuario
+- Username: Administrador, Password: administrador
+- Username: Convidado, Password: convidado
