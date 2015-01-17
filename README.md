@@ -5,7 +5,7 @@ This project is a fully functional CRM application developed on iObjects/Java/HT
 - Multi-company and multi-department support.
 - Contacts: customers, supplyers, employees.
 - Activities: calls, e-mails and any kind of interaction with contacts.
-- Tasks: contacts related requests and pendencies, due dates, forwarding and more.
+- Tasks: contacts related requests and pendencies, due dates, forwarding history and more.
 - Opportunities: leads, follow up, status, successes/failures and more.
 - Call center screen: all contact related informations on sight, frequent activities and more.
 - Calendar with holidays support and weekly visualization.
@@ -13,5 +13,4 @@ This project is a fully functional CRM application developed on iObjects/Java/HT
 - 25 cards and reports with several different analysis about ROI, ad campaigns, salesman performance, etc.
 - Tons of minor features.
 
-About iObjects CRM
-==================
+# About
