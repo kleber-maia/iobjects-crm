@@ -21,7 +21,7 @@ The UI and the source code comments were published as is: in brazilian portugues
 # Technical requisites
 - iObjects framework
 - Java 1.6 or higher
-- Netbeans 8.0 or higher (Eclipse and other IDEs should be fine, but we're going to need to configure the project by yourself).
+- Netbeans 8.0 or higher (Eclipse and other IDEs should be fine, but will require some manual configuration).
 
 # Compatibility
 All you need to take full advantage of the application is a modern web browser. My team and I have tested with Safari 7+, Chrome 30+ and Internet Explorer 9+.
