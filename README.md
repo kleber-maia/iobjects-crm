@@ -24,7 +24,7 @@ This CRM application was originally developed as a module for the [Softgroup iMa
 The UI and the source code comments were published as is: in brazilian portuguese. I apologize for any inconvenience, but I'm afraid I'll not have spare time enough to work on any kind of translation.
 
 ## Technical requisites
-- [iObjects framework](https://github.com/kleber-maia/iobjects)
+- [iObjects](https://github.com/kleber-maia/iobjects) framework
 - [iObjects Security Service](https://github.com/kleber-maia/iobjects-security-service)
 - Java 1.6 or higher
 - Netbeans 8.0 or higher.
