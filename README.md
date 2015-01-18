@@ -38,10 +38,4 @@ If you want to use Eclipse or another IDE:
 All you need to take full advantage of the application is a modern web browser. My team and I have tested with Safari 7+, Chrome 30+ and Internet Explorer 9+.
 
 ## Database structure
-There is a .sql file on the root of this project which contains all the needed table structure, plus a few sample records.
-
-## Users and passwords
-The following users will be automatically created on the first run. Additionally, you'll be able to insert all users and roles that you need by using the iObjects Security Service module.
-- Username: @Super Usuário, Password: superusuario
-- Username: Administrador, Password: administrador
-- Username: Convidado, Password: convidado
+There is a .sql file on the root of this project which contains all the needed table structure, plus a few sample records. Although the script was generated from a PostgreSQL database, it should be easy to migrate it to another RDMS of your choice.
