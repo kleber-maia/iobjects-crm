@@ -25,10 +25,11 @@ The UI and the source code comments were published as is: in brazilian portugues
 
 ## Technical requisites
 - [iObjects framework](https://github.com/kleber-maia/iobjects)
+- [iObjects Security Service](https://github.com/kleber-maia/iobjects-security-service)
 - Java 1.6 or higher
 - Netbeans 8.0 or higher.
 
-If you want to use Eclipse or other IDE:
+If you want to use Eclipse or another IDE:
 - Add **iobjects/build/web/WEB-INF/classes** and **securityservice/build/web/WEB-INF/classes** to the project's compile libraries;
 - Make sure to build the project using ".iobjects" extension instead of ".war", ex: crm.iobjects;
 - Distribute the builded project's archive to iobjects/web.work/extensions directory.
