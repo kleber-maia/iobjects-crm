@@ -26,7 +26,12 @@ The UI and the source code comments were published as is: in brazilian portugues
 ## Technical requisites
 - [iObjects framework](https://github.com/kleber-maia/iobjects)
 - Java 1.6 or higher
-- Netbeans 8.0 or higher (Eclipse and other IDEs should be fine, but will require some manual configuration).
+- Netbeans 8.0 or higher.
+
+If you want to use Eclipse or other IDE:
+- Add **iobjects/build/web/WEB-INF/classes** and **securityservice/build/web/WEB-INF/classes** to the project's compile libraries;
+- Make sure to build the project using ".iobjects" extension instead of ".war", ex: crm.iobjects;
+- Distribute the builded project's archive to iobjects/web.work/extensions directory.
 
 ## Compatibility
 All you need to take full advantage of the application is a modern web browser. My team and I have tested with Safari 7+, Chrome 30+ and Internet Explorer 9+.
